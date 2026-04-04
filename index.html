@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketplace Proof of Activity - Gilang</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; line-height: 1.6; background-color: #f0f2f5; text-align: center; }
+        .card { background: white; border: none; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h2 { color: #ff9900; margin-bottom: 10px; }
+        .status-box { font-size: 0.85em; color: #636e72; margin-top: 10px; padding: 10px; border-radius: 8px; background: #dfe6e9; word-break: break-all; }
+        button { padding: 12px 20px; cursor: pointer; background-color: #ff9900; color: white; border: none; border-radius: 8px; font-weight: bold; transition: 0.3s; width: 100%; margin-top: 10px; }
+        button:hover { background-color: #ff9900; }
+        button:disabled { background-color: #b2bec3; cursor: not-allowed; }
+        .ticket-icon { font-size: 50px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="ticket-icon"></div>
+    <h2>Marketplace Proof of Activity</h2>
+    <p>Sistem Jual beli barang</p>
+
+    <div class="card">
+        <button id="connectBtn">1. Hubungkan MetaMask</button>
+        <div id="walletAddress" class="status-box">Dompet belum terhubung</div>
+    </div>
+
+    <div class="card">
+        <p>Kamu gaada koin? Beli aja disini! (0.01 ETH)</p>
+        <button id="buyBtn" disabled style="background-color: #eb8f3a;">Beli Koin Tiket</button>
+        <small style="color: #fcfcfc; display: block; margin-top: 5px;">*Wajib punya minimal 1 koin untuk masuk</small>
+    </div>
+
+    <div class="card">
+        <p>Gunakan koin buat beli barang:</p>
+        <button id="burnBtn" disabled>2. Bayar dan bawa barang</button>
+        <div id="burnStatus" class="status-box">Silahkan hubungkan wallet...</div>
+    </div>
+
+    <script>
+        // --- KONFIGURASI PENTING ---
+        // GANTI alamat di bawah ini dengan alamat kontrak hasil Deploy terbaru di Remix!
+        const contractAddress = "0x49006b682542fCa6178be537E1859053b42f5808"; 
+        
+        const abi = [
+            {
+                "inputs": [],
+                "name": "bayarKOINToEnter",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "buyKoin",
+                "outputs": [],
+                "stateMutability": "payable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "BURN_ADDRESS",
+                "outputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "name": "hasAccess",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address" 
+                    }
+                ],
+                "name": "ticketBalance",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
+
+        let signer = null;
+        let contract = null;
+
+        const connectBtn = document.getElementById("connectBtn");
+        const buyBtn = document.getElementById("buyBtn");
+        const burnBtn = document.getElementById("burnBtn");
+        const burnStatus = document.getElementById("burnStatus");
+        const walletAddressDisplay = document.getElementById("walletAddress");
+
+        async function connectWallet() {
+            if (window.ethereum) {
+                try {
+                    const provider = new ethers.providers.Web3Provider(window.ethereum);
+                    await provider.send("eth_requestAccounts", []);
+                    signer = provider.getSigner();
+                    const address = await signer.getAddress();
+                    
+                    contract = new ethers.Contract(contractAddress, abi, signer);
+                    
+                    walletAddressDisplay.innerText = "Terhubung: " + address;
+                    walletAddressDisplay.style.color = "#27ae60";
+                    connectBtn.innerText = "✅ Wallet Connected";
+                    connectBtn.style.backgroundColor = "#27ae60";
+                    
+                    buyBtn.disabled = false;
+                    burnBtn.disabled = false;
+                    burnStatus.innerText = "Siap melakukan transaksi!";
+                } catch (error) {
+                    console.error("Gagal koneksi:", error);
+                }
+            } else {
+                alert("Silakan instal MetaMask!");
+            }
+        }
+
+        async function buyTicket() {
+            try {
+                buyBtn.disabled = true;
+                buyBtn.innerText = "Proses Pembelian...";
+                const tx = await contract.buyTicketKoin({
+                    value: ethers.utils.parseEther("0.0001")
+                });
+                await tx.wait();
+                alert("Kamu berhasi beli koin");
+            } catch (error) {
+                console.error(error);
+                alert("Pembelian gagal, Cek saldo SepoliaETH kamu.");
+            } finally {
+                buyBtn.disabled = false;
+                buyBtn.innerText = "Beli Koin";
+            }
+        }
+
+        async function burnTicket() {
+            try {
+                burnBtn.disabled = true;
+                burnBtn.innerText = "Membeli barang...";
+                burnStatus.innerText = "⏳ Menunggu konfirmasi blockchain...";
+
+                const tx = await contract.burnTicketToEnter();
+                await tx.wait();
+                
+                burnStatus.innerText = "Pembelian berhasil, barang sudah bisa dibawa pulang!";
+                alert("Proof of Activity Berhasil!");
+            } catch (error) {
+                console.error(error);
+                burnStatus.innerText = "❌ Gagal. Pastikan kamu punya koin untuk membeli barang.";
+            } finally {
+                burnBtn.disabled = false;
+                burnBtn.innerText = "2. Bayar dan bawa barang";
+            }
+        }
+
+        connectBtn.addEventListener("click", connectWallet);
+        buyBtn.addEventListener("click", buyTicket);
+        burnBtn.addEventListener("click", burnTicket);
+    </script>
+</body>
+</html>
