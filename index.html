@@ -8,17 +8,17 @@
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; line-height: 1.6; background-color: #f0f2f5; text-align: center; }
         .card { background: white; border: none; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        h2 { color: #ff9900; margin-bottom: 10px; }
-        .status-box { font-size: 0.85em; color: #636e72; margin-top: 10px; padding: 10px; border-radius: 8px; background: #dfe6e9; word-break: break-all; }
-        button { padding: 12px 20px; cursor: pointer; background-color: #ff9900; color: white; border: none; border-radius: 8px; font-weight: bold; transition: 0.3s; width: 100%; margin-top: 10px; }
-        button:hover { background-color: #ff9900; }
-        button:disabled { background-color: #b2bec3; cursor: not-allowed; }
+        h2 { color: #070707; margin-bottom: 10px; }
+        .status-box { font-size: 0.85em; color: #020202; margin-top: 10px; padding: 10px; border-radius: 8px; background: #dfe6e9; word-break: break-all; }
+        button { padding: 12px 20px; cursor: pointer; background-color: #000000; color: white; border: none; border-radius: 8px; font-weight: bold; transition: 0.3s; width: 100%; margin-top: 10px; }
+        button:hover { background-color: #030303; }
+        button:disabled { background-color: #0c0c0c; cursor: not-allowed; }
         .ticket-icon { font-size: 50px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-    <div class="ticket-icon"></div>
+    <div class="icon"></div>
     <h2>Marketplace Proof of Activity</h2>
     <p>Sistem Jual beli barang</p>
 
@@ -28,13 +28,13 @@
     </div>
 
     <div class="card">
-        <p>Kamu gaada koin? Beli aja disini! (0.01 ETH)</p>
-        <button id="buyBtn" disabled style="background-color: #eb8f3a;">Beli Koin Tiket</button>
-        <small style="color: #fcfcfc; display: block; margin-top: 5px;">*Wajib punya minimal 1 koin untuk masuk</small>
+        <p>Kamu gapunya ETH? Beli aja disini! (0.01 ETH)</p>
+        <button id="buyBtn" disabled style="background-color: #000000;">Beli Koin Tiket</button>
+        <small style="color: #000000; display: block; margin-top: 5px;">*Wajib punya minimal 1 koin untuk masuk</small>
     </div>
 
     <div class="card">
-        <p>Gunakan koin buat beli barang:</p>
+        <p>Bayar, buat membeli barang:</p>
         <button id="burnBtn" disabled>2. Bayar dan bawa barang</button>
         <div id="burnStatus" class="status-box">Silahkan hubungkan wallet...</div>
     </div>
@@ -47,21 +47,21 @@
         const abi = [
             {
                 "inputs": [],
-                "name": "bayarKOINToEnter",
+                "name": "bayarToEnter",
                 "outputs": [],
                 "stateMutability": "nonpayable",
                 "type": "function"
             },
             {
                 "inputs": [],
-                "name": "buyKoin",
+                "name": "buyBarang",
                 "outputs": [],
                 "stateMutability": "payable",
                 "type": "function"
             },
             {
                 "inputs": [],
-                "name": "BURN_ADDRESS",
+                "name": "BUY_ADDRESS",
                 "outputs": [
                     {
                         "internalType": "address",
@@ -133,7 +133,7 @@
                     
                     walletAddressDisplay.innerText = "Terhubung: " + address;
                     walletAddressDisplay.style.color = "#27ae60";
-                    connectBtn.innerText = "✅ Wallet Connected";
+                    connectBtn.innerText = "✅ Wallet Terkoneksi";
                     connectBtn.style.backgroundColor = "#27ae60";
                     
                     buyBtn.disabled = false;
@@ -143,7 +143,7 @@
                     console.error("Gagal koneksi:", error);
                 }
             } else {
-                alert("Silakan instal MetaMask!");
+                alert("Kamu harus instal MetaMask terlebih dulu!");
             }
         }
 
@@ -155,7 +155,7 @@
                     value: ethers.utils.parseEther("0.0001")
                 });
                 await tx.wait();
-                alert("Kamu berhasi beli koin");
+                alert("Kamu berhasi beli barang");
             } catch (error) {
                 console.error(error);
                 alert("Pembelian gagal, Cek saldo SepoliaETH kamu.");
@@ -178,7 +178,7 @@
                 alert("Proof of Activity Berhasil!");
             } catch (error) {
                 console.error(error);
-                burnStatus.innerText = "❌ Gagal. Pastikan kamu punya koin untuk membeli barang.";
+                burnStatus.innerText = "❌ Gagal. Pastikan kamu punya akses pembelian untuk membeli barang.";
             } finally {
                 burnBtn.disabled = false;
                 burnBtn.innerText = "2. Bayar dan bawa barang";
