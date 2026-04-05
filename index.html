@@ -1,193 +1,239 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marketplace Proof of Activity - Gilang</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; line-height: 1.6; background-color: #f0f2f5; text-align: center; }
-        .card { background: white; border: none; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        h2 { color: #070707; margin-bottom: 10px; }
-        .status-box { font-size: 0.85em; color: #020202; margin-top: 10px; padding: 10px; border-radius: 8px; background: #dfe6e9; word-break: break-all; }
-        button { padding: 12px 20px; cursor: pointer; background-color: #000000; color: white; border: none; border-radius: 8px; font-weight: bold; transition: 0.3s; width: 100%; margin-top: 10px; }
-        button:hover { background-color: #030303; }
-        button:disabled { background-color: #0c0c0c; cursor: not-allowed; }
-        .ticket-icon { font-size: 50px; margin-bottom: 10px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Proof of Activity Shop</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+
+<style>
+
+body{
+font-family: Arial;
+background: linear-gradient(135deg,#141e30,#243b55);
+color:white;
+text-align:center;
+padding:40px;
+}
+
+.card{
+background:white;
+color:black;
+padding:25px;
+border-radius:15px;
+max-width:500px;
+margin:auto;
+margin-top:20px;
+box-shadow:0 10px 30px rgba(0,0,0,0.3);
+}
+
+button{
+padding:12px;
+width:100%;
+border:none;
+border-radius:10px;
+margin-top:10px;
+font-weight:bold;
+cursor:pointer;
+}
+
+.connect{background:#3498db;color:white;}
+.buy{background:#3498db;color:white;}
+.burn{background:#3498db;color:white;}
+
+.status{
+margin-top:10px;
+background:#eee;
+padding:10px;
+border-radius:8px;
+word-break:break-all;
+}
+
+</style>
 </head>
+
 <body>
 
-    <div class="icon"></div>
-    <h2>Marketplace Proof of Activity</h2>
-    <p>Sistem Jual beli barang</p>
+<h1>🛒 Proof of Activity Shop</h1>
+<p>Sistem Jual Beli Barang berbasis Blockchain</p>
 
-    <div class="card">
-        <button id="connectBtn">1. Hubungkan MetaMask</button>
-        <div id="walletAddress" class="status-box">Dompet belum terhubung</div>
-    </div>
+<div class="card">
 
-    <div class="card">
-        <p>Kamu gapunya ETH? Beli aja disini! (0.01 ETH)</p>
-        <button id="buyBtn" disabled style="background-color: #000000;">Beli Koin Tiket</button>
-        <small style="color: #000000; display: block; margin-top: 5px;">*Wajib punya minimal 1 koin untuk masuk</small>
-    </div>
+<button class="connect" id="connectBtn">
+Hubungkan MetaMask
+</button>
 
-    <div class="card">
-        <p>Bayar, buat membeli barang:</p>
-        <button id="burnBtn" disabled>2. Bayar dan bawa barang</button>
-        <div id="burnStatus" class="status-box">Silahkan hubungkan wallet...</div>
-    </div>
+<div id="wallet" class="status">
+Wallet belum terhubung
+</div>
 
-    <script>
-        // --- KONFIGURASI PENTING ---
-        // GANTI alamat di bawah ini dengan alamat kontrak hasil Deploy terbaru di Remix!
-        const contractAddress = "0x49006b682542fCa6178be537E1859053b42f5808"; 
-        
-        const abi = [
-            {
-                "inputs": [],
-                "name": "bayarToEnter",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "buyBarang",
-                "outputs": [],
-                "stateMutability": "payable",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "BUY_ADDRESS",
-                "outputs": [
-                    {
-                        "internalType": "address",
-                        "name": "",
-                        "type": "address"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "",
-                        "type": "address"
-                    }
-                ],
-                "name": "hasAccess",
-                "outputs": [
-                    {
-                        "internalType": "bool",
-                        "name": "",
-                        "type": "bool"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "",
-                        "type": "address" 
-                    }
-                ],
-                "name": "ticketBalance",
-                "outputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            }
-        ];
+</div>
 
-        let signer = null;
-        let contract = null;
 
-        const connectBtn = document.getElementById("connectBtn");
-        const buyBtn = document.getElementById("buyBtn");
-        const burnBtn = document.getElementById("burnBtn");
-        const burnStatus = document.getElementById("burnStatus");
-        const walletAddressDisplay = document.getElementById("walletAddress");
+<div class="card">
 
-        async function connectWallet() {
-            if (window.ethereum) {
-                try {
-                    const provider = new ethers.providers.Web3Provider(window.ethereum);
-                    await provider.send("eth_requestAccounts", []);
-                    signer = provider.getSigner();
-                    const address = await signer.getAddress();
-                    
-                    contract = new ethers.Contract(contractAddress, abi, signer);
-                    
-                    walletAddressDisplay.innerText = "Terhubung: " + address;
-                    walletAddressDisplay.style.color = "#27ae60";
-                    connectBtn.innerText = "✅ Wallet Terkoneksi";
-                    connectBtn.style.backgroundColor = "#27ae60";
-                    
-                    buyBtn.disabled = false;
-                    burnBtn.disabled = false;
-                    burnStatus.innerText = "Siap melakukan transaksi!";
-                } catch (error) {
-                    console.error("Gagal koneksi:", error);
-                }
-            } else {
-                alert("Kamu harus instal MetaMask terlebih dulu!");
-            }
-        }
+<h3>Beli Ticket Aktivitas</h3>
+<p>Harga: 0.0001 ETH</p>
 
-        async function buyTicket() {
-            try {
-                buyBtn.disabled = true;
-                buyBtn.innerText = "Proses Pembelian...";
-                const tx = await contract.buyTicketKoin({
-                    value: ethers.utils.parseEther("0.0001")
-                });
-                await tx.wait();
-                alert("Kamu berhasi beli barang");
-            } catch (error) {
-                console.error(error);
-                alert("Pembelian gagal, Cek saldo SepoliaETH kamu.");
-            } finally {
-                buyBtn.disabled = false;
-                buyBtn.innerText = "Beli Koin";
-            }
-        }
+<button class="buy" id="buyBtn" disabled>
+Beli Ticket
+</button>
 
-        async function burnTicket() {
-            try {
-                burnBtn.disabled = true;
-                burnBtn.innerText = "Membeli barang...";
-                burnStatus.innerText = "⏳ Menunggu konfirmasi blockchain...";
+</div>
 
-                const tx = await contract.burnTicketToEnter();
-                await tx.wait();
-                
-                burnStatus.innerText = "Pembelian berhasil, barang sudah bisa dibawa pulang!";
-                alert("Proof of Activity Berhasil!");
-            } catch (error) {
-                console.error(error);
-                burnStatus.innerText = "❌ Gagal. Pastikan kamu punya akses pembelian untuk membeli barang.";
-            } finally {
-                burnBtn.disabled = false;
-                burnBtn.innerText = "2. Bayar dan bawa barang";
-            }
-        }
 
-        connectBtn.addEventListener("click", connectWallet);
-        buyBtn.addEventListener("click", buyTicket);
-        burnBtn.addEventListener("click", burnTicket);
-    </script>
+<div class="card">
+
+<h3>Gunakan Ticket</h3>
+
+<button class="burn" id="burnBtn" disabled>
+Bayar & Ambil Barang
+</button>
+
+<div id="status" class="status">
+Hubungkan wallet dulu
+</div>
+
+</div>
+
+
+<script>
+
+// CONTRACT ADDRESS
+const contractAddress = "0x49006b682542fCa6178be537E1859053b42f5808";
+
+// ABI
+const abi = [
+
+{
+"inputs":[],
+"name":"buyTicketKoin",
+"outputs":[],
+"stateMutability":"payable",
+"type":"function"
+},
+
+{
+"inputs":[],
+"name":"burnTicketToEnter",
+"outputs":[],
+"stateMutability":"nonpayable",
+"type":"function"
+},
+
+{
+"inputs":[
+{"internalType":"address","name":"","type":"address"}
+],
+"name":"ticketBalance",
+"outputs":[
+{"internalType":"uint256","name":"","type":"uint256"}
+],
+"stateMutability":"view",
+"type":"function"
+}
+
+];
+
+let provider;
+let signer;
+let contract;
+
+const connectBtn = document.getElementById("connectBtn");
+const buyBtn = document.getElementById("buyBtn");
+const burnBtn = document.getElementById("burnBtn");
+
+const wallet = document.getElementById("wallet");
+const status = document.getElementById("status");
+
+async function connectWallet(){
+
+if(window.ethereum){
+
+provider = new ethers.providers.Web3Provider(window.ethereum);
+
+await provider.send("eth_requestAccounts",[]);
+
+signer = provider.getSigner();
+
+const address = await signer.getAddress();
+
+contract = new ethers.Contract(contractAddress,abi,signer);
+
+wallet.innerText = "Terhubung: " + address;
+
+buyBtn.disabled = false;
+burnBtn.disabled = false;
+
+status.innerText = "Wallet berhasil terhubung";
+
+}else{
+
+alert("Install MetaMask dulu!");
+
+}
+
+}
+
+
+async function buyTicket(){
+
+try{
+
+status.innerText = "Transaksi sedang diproses...";
+
+const tx = await contract.buyTicketKoin({
+
+value: ethers.utils.parseEther("0.0001")
+
+});
+
+await tx.wait();
+
+status.innerText = "Ticket berhasil dibeli!";
+
+}catch(err){
+
+console.log(err);
+
+status.innerText = "Transaksi gagal";
+
+}
+
+}
+
+
+
+async function burnTicket(){
+
+try{
+
+status.innerText = "Memproses aktivitas...";
+
+const tx = await contract.burnTicketToEnter();
+
+await tx.wait();
+
+status.innerText = "Barang berhasil dibeli";
+
+}catch(err){
+
+console.log(err);
+
+status.innerText = "Kamu tidak punya ticket";
+
+}
+
+}
+
+
+connectBtn.onclick = connectWallet;
+buyBtn.onclick = buyTicket;
+burnBtn.onclick = burnTicket;
+
+</script>
+
 </body>
 </html>
